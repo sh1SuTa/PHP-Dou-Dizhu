@@ -1,0 +1,53 @@
+<?php
+
+require "../bootstrap.php";
+
+header("Content-Type: application/json");
+
+try {
+
+    if (!isset($_SESSION["game"])) {
+        Response::error(404, "游戏不存在");
+    }
+
+    $request = json_decode(file_get_contents("php://input"), true);
+
+    if (!isset($request["indexes"])) {
+        Response::error(400, "缺少 indexes");
+    }
+
+    /** @var Game $game */
+    $game = unserialize($_SESSION["game"]);
+
+    $service = new GameService();
+
+    $cards = $service->play($game, $request["indexes"]);
+    
+    $aiService = new AIService();
+    //轮到AI出牌
+    while($game->currentPlayer>0){
+        $indexes = $aiService->think($game->currentPlayer == 1 ? $game->ai1 : $game->ai2, $game->lastPlay);
+        if (empty($indexes)) {
+            $service->pass($game);
+            continue;
+        }
+        $service->play($game, $indexes);
+    }
+
+    $_SESSION["game"] = serialize($game);
+    Response::success([
+        "player" => $game->player,
+        "ai1Count" => count($game->ai1->handCards),
+        "ai2Count" => count($game->ai2->handCards),
+        "lastCards" => $game->lastPlay->cards,
+        "currentPlayer" => $game->currentPlayer,
+        "passCount" => $game->passCount,
+        "gameRecord" => $game->gameRecord,
+    ]);
+
+}
+catch (Exception $e) {
+
+    Response::error(500, $e->getMessage());
+
+}
