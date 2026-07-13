@@ -52,7 +52,7 @@ class GameService
         }
 
         if (!$isWin) {
-            throw new Exception("牌型不合法");
+            throw new Exception("牌型小于上一手出牌的人，不能出");
         }
         //大于上一手出牌的人，开始删牌
         rsort($indexes);

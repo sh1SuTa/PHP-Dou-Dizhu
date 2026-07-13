@@ -21,12 +21,14 @@ class Game
     public Player $ai1;
 
     public Player $ai2;
-
+    // 底牌
     public array $bottomCards = [];
+    //谁抢地主
+    public int $robber = 0;
     // 上一手牌
     public ?RuleResult $lastPlay = null;
     public int $lastPlayer = -1;
-    // 当前轮到谁永远是012
+    // 当前轮到谁，0：玩家 1：AI1 2：AI2
     public int $currentPlayer = 0;
     // 连续Pass数量
     public int $passCount = 0;

@@ -235,7 +235,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>🃏 斗地主</h1>
+        <h1>🃏 我是地主</h1>
 
         <div class="btn-container">
             <button class="btn" onclick="initGame()">开始游戏</button>

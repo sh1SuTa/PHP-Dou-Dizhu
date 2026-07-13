@@ -3,7 +3,7 @@
 require "../bootstrap.php";
 
 $deck = new Deck();
-
+// 洗牌
 $deck->shuffle();
 
 $game = new Game();
@@ -20,11 +20,14 @@ for ($i = 0; $i < 17; $i++) {
 
 }
 
-$game->bottomCards = [
-    $deck->draw(),
-    $deck->draw(),
-    $deck->draw()
-];
+$game->bottomCards = $deck->cards;
+//先默认玩家是地主
+for($i = 0; $i < 3; $i++)
+{
+    $game->player->addCard($deck->draw());
+}
+
+
 
 $game->player->sortCards();
 $game->ai1->sortCards();

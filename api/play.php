@@ -39,9 +39,12 @@ try {
         "player" => $game->player,
         "ai1Count" => count($game->ai1->handCards),
         "ai2Count" => count($game->ai2->handCards),
-        "lastCards" => $game->lastPlay->cards,
+        "lastCards" => $game->lastPlay ? $game->lastPlay->cards : null,
+        "lastPlayer" => $game->lastPlayer,
         "currentPlayer" => $game->currentPlayer,
         "passCount" => $game->passCount,
+        "gameOver" => $game->gameOver,
+        "winner" => $game->winner,
         "gameRecord" => $game->gameRecord,
     ]);
 
