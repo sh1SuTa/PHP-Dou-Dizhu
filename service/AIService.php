@@ -2,7 +2,7 @@
 class AIService
 {
     // 统计手牌中每个值的索引
-    private function countValues(Player $player): array
+    private function countValuesIndex(Player $player): array
     {
         $map = [];
 
@@ -31,6 +31,10 @@ class AIService
             return $this->findTripleGreater($player, $lastPlay->value);
         case CardType::TRIPLE_WITH_ONE:
             return $this->findTripleOneGreater($player, $lastPlay->value);
+        case CardType::TRIPLE_WITH_PAIR:
+            return $this->findTriplePairGreater($player, $lastPlay->value);
+        case CardType::STRAIGHT:
+            return $this->findStraightGreater($player, $lastPlay->value, $lastPlay->length);
         case CardType::BOMB:
             return $this->findBombGreater($player, $lastPlay->value);
         
@@ -63,7 +67,7 @@ class AIService
         return [];
     }
     private function findTripleGreater(Player $player, int $lastValue): array{
-        $map = $this->countValues($player);
+        $map = $this->countValuesIndex($player);
 
         foreach ($map as $value => $indexes) {
 
@@ -78,7 +82,7 @@ class AIService
 
     }
     private function findTripleOneGreater(Player $player, int $lastValue): array{
-        $map = $this->countValues($player);
+        $map = $this->countValuesIndex($player);
         ksort($map);
 
         foreach ($map as $value => $indexes) {
@@ -97,8 +101,27 @@ class AIService
         }
         return [];
     }
+    private function findTriplePairGreater(Player $player,int $lastValue):array{
+        $map = $this->countValuesIndex($player);
+        ksort($map);
+        foreach ($map as $value => $indexes) {
+            if ($value > $lastValue && count($indexes) >= 3) {
+                // 三张
+                $result = array_slice($indexes, 0, 3);
+                // 找一张对子（不能是这组三张）
+                foreach ($player->handCards as $index => $card) {
+                    if ($card->value != $value&&$card->value==$player->handCards[$index+1]->value) {
+                        $result[] = $index;
+                        return $result;
+                    }
+                }
+            }
+        }
+        return [];
+
+    }
     private function findBombGreater(Player $player, int $lastValue): array{
-        $map = $this->countValues($player);
+        $map = $this->countValuesIndex($player);
 
         foreach ($map as $value => $indexes) {
 
@@ -109,16 +132,44 @@ class AIService
         }
         return [];
     }
-    
+    private function findStraightGreater(Player $player, int $lastValue, int $length): array{
+        $map = $this->countValuesIndex($player);
+        ksort($map);
+        $points = array_keys($map);
+        //过滤2和大小王
+        $points = array_filter($points, function ($v) {
+            return $v <=14;
+        });
+        if(count($points)<$length){
+            return [];
+        }
+        $useCards = [];
+        // 从哪张牌开始找？
+        $minCard=$lastValue-$length+2;
+        //滑动窗口找连续
+        for ($i = 0; $i < count($points); $i++) {
+            //最小的牌必须在窗口内，并且最小的牌+长度-1必须等于数组索引+长度-1
+            if($points[$i]>=$minCard&&$points[$i]+$length-1==$points[$i+$length-1]){
+                $useCards=array_slice($points,$i,$length);
+                $result = [];
+                foreach ($useCards as $value) {
 
-    private function thinkFirstPlay(Player $player): array
-{
-    $pair = $this->findSmallestPair($player);
-    if (!empty($pair)) {
-        return $pair;
+                    $result[] = $map[$value][0];
+
+                }
+                return $result;
+            }
+        }
+        return [];
+
     }
-    return $this->findSmallestSingle($player);
-}
+    private function thinkFirstPlay(Player $player): array{
+        $pair = $this->findSmallestPair($player);
+        if (!empty($pair)) {
+            return $pair;
+        }
+        return $this->findSmallestSingle($player);
+    }
 
 private function findSmallestSingle(Player $player): array
 {

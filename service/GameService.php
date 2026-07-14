@@ -55,7 +55,7 @@ class GameService
             throw new Exception("牌型小于上一手出牌的人，不能出");
         }
         //大于上一手出牌的人，开始删牌
-        rsort($indexes);
+        rsort($indexes);//从大到小排序要删的索引
         foreach ($indexes as $index) {
             array_splice($player->handCards, $index, 1);
         }

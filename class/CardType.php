@@ -24,11 +24,12 @@ class CardType
     // 飞机带对
     public const PLANE_WITH_PAIR = 44;
 
-    // 四带二
-    public const QUAD = 5;
+    
 
     // 炸弹
     public const BOMB = 5;
+    // 四带二
+    public const QUAD = 51;
 
     // 王炸
     public const JOKER_BOMB = 6;
