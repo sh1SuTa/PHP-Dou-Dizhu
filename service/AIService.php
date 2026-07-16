@@ -35,6 +35,8 @@ class AIService
             return $this->findTriplePairGreater($player, $lastPlay->value);
         case CardType::STRAIGHT:
             return $this->findStraightGreater($player, $lastPlay->value, $lastPlay->length);
+        case CardType::PAIR_PAIR:
+            return $this->findPairPairGreater($player, $lastPlay->value, $lastPlay->length);
         case CardType::BOMB:
             return $this->findBombGreater($player, $lastPlay->value);
         
@@ -120,18 +122,6 @@ class AIService
         return [];
 
     }
-    private function findBombGreater(Player $player, int $lastValue): array{
-        $map = $this->countValuesIndex($player);
-
-        foreach ($map as $value => $indexes) {
-
-            if ($value > $lastValue && count($indexes) >= 4) {
-                return array_slice($indexes, 0, 4);
-
-            }
-        }
-        return [];
-    }
     private function findStraightGreater(Player $player, int $lastValue, int $length): array{
         $map = $this->countValuesIndex($player);
         ksort($map);
@@ -147,8 +137,8 @@ class AIService
         // 从哪张牌开始找？
         $minCard=$lastValue-$length+2;
         //滑动窗口找连续
-        for ($i = 0; $i < count($points); $i++) {
-            //最小的牌必须在窗口内，并且最小的牌+长度-1必须等于数组索引+长度-1
+        for ($i = 0; $i <= count($points)-$length; $i++) {
+            //最小的牌必须在窗口内，并且最小的牌+长度-1必须等于数组[索引+长度-1]
             if($points[$i]>=$minCard&&$points[$i]+$length-1==$points[$i+$length-1]){
                 $useCards=array_slice($points,$i,$length);
                 $result = [];
@@ -163,6 +153,61 @@ class AIService
         return [];
 
     }
+    private function findPairPairGreater(Player $player, int $lastValue, int $length): array{
+        $map = $this->countValuesIndex($player);
+        ksort($map);
+        $points = array_keys($map);
+        $points = array_filter($points, function ($v) {
+            return $v <=14;
+        });
+        $points = array_values($points);
+        
+        $pairCount = $length / 2;
+        if(count($points) < $pairCount){
+            return [];
+        }
+        $result = [];
+        $minCard=$lastValue-($length/2)+2;
+        for ($i = 0; $i <= count($points) - $pairCount;$i++ ) {
+            $result = [];
+            if($points[$i]<$minCard){
+                continue;
+            }
+            for ($j = 0; $j < $pairCount; $j++) {
+                $currentPoint = $points[$i + $j];
+                if (!isset($map[$currentPoint]) || count($map[$currentPoint]) < 2) {
+                    $i=$i+$j;
+                    break;
+                }
+                if ($j > 0 && $currentPoint != $points[$i + $j - 1] + 1) {
+                    
+                    $i=$i+$j;
+                    break;
+                }
+                
+                $result = array_merge($result, array_slice($map[$currentPoint], 0, 2));
+                
+            }
+            if(count($result)==$pairCount*2){
+                return $result;
+            }
+            
+        }
+        return [];
+    }
+    private function findBombGreater(Player $player, int $lastValue): array{
+        $map = $this->countValuesIndex($player);
+
+        foreach ($map as $value => $indexes) {
+
+            if ($value > $lastValue && count($indexes) >= 4) {
+                return array_slice($indexes, 0, 4);
+
+            }
+        }
+        return [];
+    }
+    
     private function thinkFirstPlay(Player $player): array{
         $pair = $this->findSmallestPair($player);
         if (!empty($pair)) {

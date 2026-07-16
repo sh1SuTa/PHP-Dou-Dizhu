@@ -4,6 +4,11 @@ require "../bootstrap.php";
 
 header("Content-Type: application/json");
 
+// 将 PHP 错误转换为异常，防止输出 HTML 破坏 JSON
+set_error_handler(function($errno, $errstr, $errfile, $errline) {
+    throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
+});
+
 try {
 
     if (!isset($_SESSION["game"])) {
@@ -51,6 +56,6 @@ try {
 }
 catch (Exception $e) {
 
-    Response::error(500, $e->getMessage());
+    Response::error(500, $e->getMessage() . " [文件:" . basename($e->getFile()) . " 行:" . $e->getLine() . "]");
 
 }
